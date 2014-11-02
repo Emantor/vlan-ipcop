@@ -82,8 +82,8 @@ sub deactivate_unused {
       if (grep /^$if$/, @vifs) {
         #print $if ." in use!\n";
       } else {
-        print "Virtual interface " .$if ." is not configured any more. We will remove it. (vconfig rem " .$if .")\n";
-        system("vconfig rem " .$if ."\n");
+        print "Virtual interface " .$if ." is not configured any more. We will remove it. (ip link delete " .$if ." type vlan" . ")\n";
+        system("ip link delete " .$if ." type vlan" . "\n");
       }
     }
   }
@@ -108,8 +108,8 @@ sub activate {
     if (grep /^$vif$/, @all_ifs) {
       print "Virtual interface " .$vif ." is up. We will do nothing.\n";
     } else {
-      print "Virtual interface " .$vif ." is not up. We will set it up. (vconfig add " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." " .$vlan .")\n";
-      system("vconfig add " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." " .$vlan);
+      print "Virtual interface " .$vif ." is not up. We will set it up. (ip link add link " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." name  " .$vlansettings{"VLAN_" .$vlan ."_IF"}.".".$vlan . " type vlan id " .$vlan".)\n";
+      system("ip link add link " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." name  " .$vlansettings{"VLAN_" .$vlan ."_IF"}.".".$vlan . " type vlan id " .$vlan);
       #print $vlansettings{"VLAN_" .$vlan ."_IF"};
     }
   }
@@ -120,8 +120,8 @@ sub deactivate {
   foreach my $if (@all_ifs) {
     $if = VLAN::trim($if);
     if ($if =~ m/\.[0-9]{1,4}$/) {
-      print "Virtual interface " .$if ." is not configured any more. We will remove it. (vconfig rem " .$if .")\n";
-      system("vconfig rem " .$if ."\n");
+      print "Virtual interface " .$if ." is not configured any more. We will remove it. (ip link delete " .$if ." type vlan" . ")\n";
+      system("ip link delete " .$if ." type vlan" . "\n");
     }
   }
 }
