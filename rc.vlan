@@ -1,0 +1,127 @@
+#!/usr/bin/perl
+use strict;
+
+require '/usr/lib/ipcop/general-functions.pl';
+require '/usr/local/lib/vlan-lib.pl';
+
+my %vlansettings;
+my $debug = 0;
+
+&General::readhash('/var/ipcop/ethernet/vlan', \%vlansettings);
+
+my @ifs = VLAN::get_ifs(\%vlansettings);
+my @vlans = VLAN::get_vlans(\%vlansettings);
+my @vifs = VLAN::get_vifs(\%vlansettings);
+
+@vlans = VLAN::uniq(@vlans);
+@ifs = VLAN::uniq(@ifs);
+#@vifs = VLAN::uniq(@ifs);
+
+
+# get all physical and virtual up interfaces 
+my @up_ifs = `ifconfig | grep -e '^[a-z]*-' | cut -f 1 -d ' ' `;
+# get any interface 
+my @all_ifs = `ifconfig -a | grep -e '^[a-z]*-' | cut -f 1 -d ' ' `;
+
+if ( $debug == 1 ) {
+  #print "UP Interfaces\n";
+  #print @up_ifs;
+  #print "ALL Interfaces\n";
+  #print @all_ifs;
+  #print "Vlans\n";
+  #print @vlans;
+  #print "Interfaces\n";
+  #print @ifs;
+  #print "VInterfaces\n";
+  #print @vifs;
+}
+
+
+
+
+if (! -d '/sys/module/8021q') {
+  system('/sbin/modprobe 8021q');
+}
+
+unless ($ARGV[0]) {
+  deactivate_unused();
+  activate();
+  exit 0;
+}
+
+if (($ARGV[0] eq 'init') || ($ARGV[0] eq '--init')) {
+  activate();
+}
+elsif (($ARGV[0] eq 'load') || ($ARGV[0] eq '--load')) {
+  activate();
+}
+elsif (($ARGV[0] eq 'unload') || ($ARGV[0] eq '--unload')) {
+  deactivate();
+}
+elsif (($ARGV[0] eq 'reload') || ($ARGV[0] eq '--reload')) {
+  deactivate_unused();
+  activate();
+}
+elsif (($ARGV[0] eq 'cleanup') || ($ARGV[0] eq '--cleanup')) {
+  deactivate_unused();
+}
+else {
+    print("ERROR: rc.vlan bad argument $ARGV[0]\n");
+    exit 1;
+}
+
+exit 0;
+
+
+
+sub deactivate_unused {
+  # remove not configured vlan interfaces
+  foreach my $if (@all_ifs) {
+    $if = VLAN::trim($if);
+    if ($if =~ m/\.[0-9]{1,4}$/) {
+      if (grep /^$if$/, @vifs) {
+        #print $if ." in use!\n";
+      } else {
+        print "Virtual interface " .$if ." is not configured any more. We will remove it. (vconfig rem " .$if .")\n";
+        system("vconfig rem " .$if ."\n");
+      }
+    }
+  }
+}
+
+sub activate {
+
+  # setup all used interfaces if it is not up 
+  foreach my $if (@ifs) {
+    $if = VLAN::trim($if);
+    if (grep /^$if$/, @up_ifs) {
+      print "Physical interface " .$if ." is up. We will do nothing.\n";
+    } else {
+      print "Physical interface " .$if ." is not up. We will set it up. (ifconfig " .$if ." 0.0.0.0 up)\n";
+      system("ifconfig " .$if ." 0.0.0.0 up");
+    }
+  }
+ 
+  # configure each used vlan
+  foreach my $vlan (@vlans) {
+    my $vif = $vlansettings{"VLAN_" .$vlan ."_IF"} ."."  .$vlan;
+    if (grep /^$vif$/, @all_ifs) {
+      print "Virtual interface " .$vif ." is up. We will do nothing.\n";
+    } else {
+      print "Virtual interface " .$vif ." is not up. We will set it up. (vconfig add " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." " .$vlan .")\n";
+      system("vconfig add " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." " .$vlan);
+      #print $vlansettings{"VLAN_" .$vlan ."_IF"};
+    }
+  }
+}
+
+sub deactivate {
+  # remove not configured vlan interfaces
+  foreach my $if (@all_ifs) {
+    $if = VLAN::trim($if);
+    if ($if =~ m/\.[0-9]{1,4}$/) {
+      print "Virtual interface " .$if ." is not configured any more. We will remove it. (vconfig rem " .$if .")\n";
+      system("vconfig rem " .$if ."\n");
+    }
+  }
+}

@@ -1,0 +1,12 @@
+--- /etc/rc.d/rc.sysinit	2010-01-21 15:42:54.000000000 +0100
++++ rc.sysinit	2010-01-29 08:10:23.000000000 +0100
+@@ -331,6 +331,9 @@
+ # APM not loading is not really an error, so be positive
+ true && test_ok
+ 
++echo "Starting VLAN interfaces ... "
++/etc/rc.d/rc.vlan --init
++
+ echo "Starting network ... "
+ /etc/rc.d/rc.net --init
+ 

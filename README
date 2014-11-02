@@ -1,0 +1,36 @@
+
+REQUIREMENT
+---------------------------------
+Yiu will have to install the addon Extra Interfaces to configure IP-addresses 
+to your virtual interfaces.
+
+CHANGELOG
+---------------------------------
+0.2.0 / 09-03-2010
+- Add check for Extra Interfaces to installer
+- Add check for Extra Interfaces to CGI
+- Add description to VLANs
+- Add edit function for description
+- Add init options to rc.vlan
+
+FILEINFO
+---------------------------------
+install             - Installation script
+langs/de.pl         - German language file
+langs/de.pl         - Englisch language file
+rc.sysinit.patch    - patch for rc.sysinti
+rc.vlan             - startup script to setup vlans
+vlan.cgi            - vlan configuration CGI for WebGUI
+vlan_helper         - used to run ./rc.vlan as root 
+vlan-lib.pl         - function library used by vlan.cgi and vlanconfig
+
+TODO
+---------------------------------
+- Clean up code
+
+ROAD MAP
+-------------------------------------
+
+BUGS
+-------------------------------------
+

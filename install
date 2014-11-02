@@ -1,0 +1,129 @@
+#!/bin/bash
+# ipcop addon binary installer Ver 0.9a for IPCop 1.9.x
+#
+# created 01 January 2005 by Frank 'Darkmann' Koch <darkmann@black-empire.de>
+# modified 02 January 2005 by Tom 'wintermute' Eichstaedt <wintermute@tom-e.de>
+#
+# extended 2006-02-24 by weizen_42
+#
+# $Id: install 376 2009-08-13 12:54:25Z weizen_42 $
+# 
+# changed 2010-01-28 by crazy_penguin
+#
+
+
+CMD="$1"
+
+#error handling
+err()
+{
+	echo " "
+	echo "Error : $1 "
+	echo " "
+	echo "Choose your option:"
+	echo " "
+	echo "./install -i   ---> to install"
+	echo "./install -u   ---> to uninstall"
+	echo " "
+	exit
+}
+
+# installation
+ai()
+{
+    ## verify already installed and uninstall
+    if [ -e /home/httpd/cgi-bin/vlan.cgi ]; then
+        echo "Upgrading"
+        au
+    fi
+
+    if [ ! -e /home/httpd/cgi-bin/xtiface.cgi ]; then
+        echo "Please note the addon "Extra Interfaces" is not installed! So you have to set the IP-addresses of your virtual interfaces manualy Your can install "Extra Interfaces" after finishing this installert or later. "
+		read -p "Do you want to continue any way? [y/N]: " ask
+		if [ "$(echo $ask | tr [:upper:] [:lower:])" != "y" ]
+		then
+          echo "Abort installation!"
+          exit 1
+		fi
+    fi
+	
+	
+    echo "Copying files"
+    mkdir -p                /usr/local/lib/
+    cp -p vlan-lib.pl       /usr/local/lib/
+    cp -p rc.vlan           /etc/rc.d/
+    cp -p vlan_helper       /usr/local/bin
+    touch                   /var/ipcop/ethernet/vlan
+    chown nobody:nobody     /var/ipcop/ethernet/vlan
+    chown root:root         /etc/rc.d/rc.vlan
+    chown root:nobody       /usr/local/bin/vlan_helper
+    chmod 4750              /usr/local/bin/vlan_helper
+    echo "Add CGI"
+    addcgi vlan.cgi
+
+    echo "Patching rc.sysinit"
+    patch /etc/rc.d/rc.sysinit rc.sysinit.patch
+
+    # supported languages
+    echo "Adding language texts"
+    addtolanguage VLan en,de langs
+}
+
+# deinstallation
+au()
+{
+    if [ ! -e /home/httpd/cgi-bin/vlan.cgi ]; then
+        echo "VLan addon is not installed !"
+        exit
+    fi
+	
+    echo "Reversing patch from rc.sysinit"
+	if [ "$(grep -e 'rc.vlan --init' /etc/rc.d/rc.sysinit)" == "" ]
+	then
+	  patch -R /etc/rc.d/rc.sysinit -i rc.sysinit_0.1.0.patch
+	else
+      patch -R /etc/rc.d/rc.sysinit -i rc.sysinit.patch
+	fi
+
+    removecgi vlan.cgi
+    rm        /etc/rc.d/rc.vlan
+    rm        /usr/local/lib/vlan-lib.pl
+    rm        /usr/local/bin/vlan_helper
+
+    # remove languages
+    echo "Removing language texts"
+    removefromlanguage VLan
+
+    # remove from sysinit
+    echo "Remove from index page"
+}
+
+
+if [ ! -e /usr/lib/ipcop/library.sh ]; then
+    echo "Upgrade your IPCop, library.sh is missing"
+    exit 1
+fi
+. /usr/lib/ipcop/library.sh
+
+case $CMD in
+    -i|i|install)
+        echo " "
+        echo "Installing now ..."
+        ai
+        echo "Successfully done!"
+        echo " ";;
+
+    -u|u|uninstall)
+        echo " "
+        echo "Deinstalling addon now ..."
+        au
+	rm    /var/ipcop/ethernet/vlan
+	echo "Successfully done!"
+        echo " ";;
+ 
+    *)
+        err "Invalid Option";;
+esac
+sync
+#end of file
+
