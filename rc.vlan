@@ -19,21 +19,26 @@ my @vifs = VLAN::get_vifs(\%vlansettings);
 
 
 # get all physical and virtual up interfaces 
-my @up_ifs = `ifconfig | grep -e '^[a-z]*-' | cut -f 1 -d ' ' `;
+my @up_ifs = `ifconfig | grep -e '^[a-z]*-' | cut -f 1 -d ' ' | sed -e 's/://' `;
 # get any interface 
-my @all_ifs = `ifconfig -a | grep -e '^[a-z]*-' | cut -f 1 -d ' ' `;
+my @all_ifs = `ifconfig -a | grep -e '^[a-z]*-' | cut -f 1 -d ' ' | sed -e 's/://' `;
 
 if ( $debug == 1 ) {
-  #print "UP Interfaces\n";
-  #print @up_ifs;
-  #print "ALL Interfaces\n";
-  #print @all_ifs;
-  #print "Vlans\n";
-  #print @vlans;
-  #print "Interfaces\n";
-  #print @ifs;
-  #print "VInterfaces\n";
-  #print @vifs;
+  print "UP Interfaces\n";
+  print @up_ifs;
+  print "\n";
+  print "ALL Interfaces\n";
+  print @all_ifs;
+  print "\n";
+  print "Vlans\n";
+  print @vlans;
+  print "\n";
+  print "Interfaces\n";
+  print @ifs;
+  print "\n";
+  print "VInterfaces\n";
+  print @vifs;
+  print "\n\n";
 }
 
 
@@ -108,7 +113,7 @@ sub activate {
     if (grep /^$vif$/, @all_ifs) {
       print "Virtual interface " .$vif ." is up. We will do nothing.\n";
     } else {
-      print "Virtual interface " .$vif ." is not up. We will set it up. (ip link add link " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." name  " .$vlansettings{"VLAN_" .$vlan ."_IF"}.".".$vlan . " type vlan id " .$vlan".)\n";
+      print "Virtual interface " .$vif ." is not up. We will set it up. (ip link add link " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." name  " .$vlansettings{"VLAN_" .$vlan ."_IF"}.".".$vlan . " type vlan id " .$vlan.")\n";
       system("ip link add link " .$vlansettings{"VLAN_" .$vlan ."_IF"} ." name  " .$vlansettings{"VLAN_" .$vlan ."_IF"}.".".$vlan . " type vlan id " .$vlan);
       #print $vlansettings{"VLAN_" .$vlan ."_IF"};
     }

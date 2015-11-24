@@ -1,11 +1,14 @@
 
 REQUIREMENT
 ---------------------------------
-Yiu will have to install the addon Extra Interfaces to configure IP-addresses 
+You will have to install the addon Extra Interfaces to configure IP-addresses 
 to your virtual interfaces.
 
 CHANGELOG
 ---------------------------------
+0.2.1 / 24-11-2015
+- Fixed couple of scripts to enable successful execution on IPCop 2.0 firewall
+
 0.2.0 / 09-03-2010
 - Add check for Extra Interfaces to installer
 - Add check for Extra Interfaces to CGI

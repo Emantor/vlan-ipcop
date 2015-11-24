@@ -77,7 +77,7 @@ sub get_vlans {
       #print $var ." - " .$vl_hash{"$var"} ." - " .$& ."\n";
     }
   }
-  $VLAN::vlan_count = VLAN::uniq(@r);
+  #$VLAN::vlan_count = VLAN::uniq(@r);
   return @r;
 }
 
